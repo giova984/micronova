@@ -20,6 +20,8 @@ from .. import (
 )
 
 UNIT_BAR = "bar"
+ICON_FAN = "mdi:fan"
+ICON_STATUS = "mdi:state-machine"
 
 MicroNovaSensor = micronova_ns.class_("MicroNovaSensor", sensor.Sensor, cg.Component)
 
@@ -70,6 +72,7 @@ CONFIG_SCHEMA = cv.Schema(
             MicroNovaSensor,
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=UNIT_REVOLUTIONS_PER_MINUTE,
+            icon=ICON_FAN,
         )
         .extend(
             MICRONOVA_LISTENER_SCHEMA(

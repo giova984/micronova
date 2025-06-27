@@ -18,7 +18,7 @@ from .. import (
     micronova_ns,
 )
 
-ICON_FLASH = "mdi:flash"
+ICON_FLASH = "mdi:fire"
 
 CONF_THERMOSTAT_TEMPERATURE = "thermostat_temperature"
 CONF_POWER_LEVEL = "power_level"

@@ -13,6 +13,7 @@ from .. import (
 )
 
 CONF_STOVE_STATE = "stove_state"
+ICON_STATE = "mdi:state-machine"
 
 MicroNovaTextSensor = micronova_ns.class_(
     "MicroNovaTextSensor", text_sensor.TextSensor, cg.Component
@@ -22,7 +23,8 @@ CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(CONF_MICRONOVA_ID): cv.use_id(MicroNova),
         cv.Optional(CONF_STOVE_STATE): text_sensor.text_sensor_schema(
-            MicroNovaTextSensor
+            MicroNovaTextSensor,
+            icon=ICON_STATE,
         ).extend(
             MICRONOVA_LISTENER_SCHEMA(
                 default_memory_location=0x00, default_memory_address=0x21
