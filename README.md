@@ -1,9 +1,9 @@
 # ESPhome component for Micronova board based pellet stoves. 
 
-There is a pull request in the ESPHome repo (https://github.com/esphome/esphome/pull/4760).<br>
-ESPHome documentation preview: https://deploy-preview-2890--esphome.netlify.app/components/micronova.html
+The Micronova component is now part of ESPHome. This repo is still valid and is the first place where new features and bugfixes show up.
+Full ESPHome documentation: https://esphome.io/components/micronova
 
-You have to build a simple circuit to interface with your stove see documentation preview for the details. You can also order a board from 
+You have to build a simple circuit to interface with your stove see ESPHome documentation for the details. You can also order a board from 
 [@philibertc](https://github.com/philibertc), that should make it dead easy.
 
 ## Example configuration
@@ -20,6 +20,7 @@ uart:
 
 micronova:
   enable_rx_pin: D2
+  serial_reply_delay: 100ms
 ```
 
 A generic example below. All buttons, sensors, text_sensors, switch and numbers accept a memory_location and memory_address. Specify those if the defaults don't work for you.
@@ -38,6 +39,7 @@ external_components:
 micronova:
   enable_rx_pin: 7
   update_interval: 20s
+  serial_reply_delay: 100ms
 
 text_sensor:
   - platform: micronova
@@ -51,6 +53,7 @@ number:
       step: 1
     power_level:
       name: Power level
+      max_value: 4
 
 sensor:
   - platform: micronova
