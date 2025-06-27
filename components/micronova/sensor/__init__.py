@@ -95,7 +95,7 @@ CONFIG_SCHEMA = cv.Schema(
             )
         ).extend(
             {
-            cv.Optional(CONF_MULTIPLY, default=0.5): cv.float_(min=0.0),
+            cv.Optional(CONF_MULTIPLY, default=0.5): cv.float_,
             }
         ),
         cv.Optional(CONF_WATER_PRESSURE): sensor.sensor_schema(
