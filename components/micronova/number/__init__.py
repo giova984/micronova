@@ -18,7 +18,7 @@ from .. import (
     micronova_ns,
 )
 
-ICON_FLASH = "mdi:fire"
+ICON_POWER_LEVEL = "mdi:fire"
 
 CONF_THERMOSTAT_TEMPERATURE = "thermostat_temperature"
 CONF_POWER_LEVEL = "power_level"
@@ -49,7 +49,7 @@ CONFIG_SCHEMA = cv.Schema(
         ),
         cv.Optional(CONF_POWER_LEVEL): number.number_schema(
             MicroNovaNumber,
-            icon=ICON_FLASH,
+            icon=ICON_POWER_LEVEL,
         )
         .extend(
             MICRONOVA_LISTENER_SCHEMA(

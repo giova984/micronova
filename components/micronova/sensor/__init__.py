@@ -21,7 +21,7 @@ from .. import (
 
 UNIT_BAR = "bar"
 ICON_FAN = "mdi:fan"
-ICON_STATUS = "mdi:state-machine"
+ICON_PRESSURE = "mdi:gauge"
 
 MicroNovaSensor = micronova_ns.class_("MicroNovaSensor", sensor.Sensor, cg.Component)
 
@@ -99,6 +99,7 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_PRESSURE,
             state_class=STATE_CLASS_MEASUREMENT,
             accuracy_decimals=1,
+            icon=ICON_PRESSURE,
         ).extend(
             MICRONOVA_LISTENER_SCHEMA(
                 default_memory_location=0x00, default_memory_address=0x3C
