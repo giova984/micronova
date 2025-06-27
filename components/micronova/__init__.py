@@ -18,7 +18,7 @@ CONF_SERIAL_REPLY_DELAY = "serial_reply_delay"
 CONF_MEMORY_LOCATION = "memory_location"
 CONF_MEMORY_ADDRESS = "memory_address"
 
-micronova_ns = cg.esphome_ns.namespace("micronova_dev")
+micronova_ns = cg.esphome_ns.namespace("micronova")
 
 MicroNovaFunctions = micronova_ns.enum("MicroNovaFunctions", is_class=True)
 MICRONOVA_FUNCTIONS_ENUM = {
