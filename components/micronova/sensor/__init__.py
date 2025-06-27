@@ -34,6 +34,7 @@ CONF_WATER_TEMPERATURE = "water_temperature"
 CONF_WATER_PRESSURE = "water_pressure"
 CONF_MEMORY_ADDRESS_SENSOR = "memory_address_sensor"
 CONF_FAN_RPM_OFFSET = "fan_rpm_offset"
+CONF_WATER_TEMP_MULT_FACTOR = "water_temp_mult_factor"
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -95,7 +96,7 @@ CONFIG_SCHEMA = cv.Schema(
             )
         ).extend(
             {
-            cv.Optional(CONF_MULTIPLY, default=0.5): cv.float_,
+            cv.Optional(CONF_WATER_TEMP_MULT_FACTOR, default=0.5): cv.float_,
             }
         ),
         cv.Optional(CONF_WATER_PRESSURE): sensor.sensor_schema(
@@ -172,6 +173,7 @@ async def to_code(config):
         cg.add(sens.set_memory_location(water_temperature_config[CONF_MEMORY_LOCATION]))
         cg.add(sens.set_memory_address(water_temperature_config[CONF_MEMORY_ADDRESS]))
         cg.add(sens.set_function(MicroNovaFunctions.STOVE_FUNCTION_WATER_TEMPERATURE))
+        cg.add(sens.set_water_temp_mult_factor(water_temperature_config[CONF_WATER_TEMP_MULT_FACTOR]))
 
     if water_pressure_config := config.get(CONF_WATER_PRESSURE):
         sens = await sensor.new_sensor(water_pressure_config, mv)

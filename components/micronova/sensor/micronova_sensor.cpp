@@ -19,7 +19,7 @@ void MicroNovaSensor::process_value_from_stove(int value_from_stove) {
       new_sensor_value = new_sensor_value == 0 ? 0 : (new_sensor_value * 10) + this->fan_speed_offset_;
       break;
     case MicroNovaFunctions::STOVE_FUNCTION_WATER_TEMPERATURE:
-      new_sensor_value = new_sensor_value * this->traits.get_multiply();
+      new_sensor_value = new_sensor_value * this->water_temp_mult_factor_;
       break;
     case MicroNovaFunctions::STOVE_FUNCTION_WATER_PRESSURE:
       new_sensor_value = new_sensor_value / 10;
