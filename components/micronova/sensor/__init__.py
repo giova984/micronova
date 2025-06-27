@@ -7,6 +7,7 @@ from esphome.const import (
     STATE_CLASS_MEASUREMENT,
     UNIT_CELSIUS,
     UNIT_REVOLUTIONS_PER_MINUTE,
+    CONF_MULTIPLY
 )
 
 from .. import (
@@ -87,11 +88,15 @@ CONFIG_SCHEMA = cv.Schema(
             unit_of_measurement=UNIT_CELSIUS,
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
-            accuracy_decimals=1,
+            accuracy_decimals=0,
         ).extend(
             MICRONOVA_LISTENER_SCHEMA(
                 default_memory_location=0x00, default_memory_address=0x3B
             )
+        ).extend(
+            {
+            cv.Optional(CONF_MULTIPLY, default=1.0): cv.float(min=0.0),
+            }
         ),
         cv.Optional(CONF_WATER_PRESSURE): sensor.sensor_schema(
             MicroNovaSensor,
