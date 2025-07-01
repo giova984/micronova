@@ -102,7 +102,7 @@ async def to_code(config):
     if power_level_config := config.get(CONF_POWER_LEVEL):
         numb = await number.new_number(
             power_level_config,
-            min_value=power_level_config.get(CONF_MAX_VALUE),
+            min_value=power_level_config.get(CONF_MIN_VALUE),
             max_value=power_level_config.get(CONF_MAX_VALUE),
             step=1,
         )
