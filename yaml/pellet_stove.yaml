@@ -1,0 +1,283 @@
+esphome:
+  name: stufa-pellet
+  friendly_name: Stufa Pellet
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: esp-idf
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "D3k4AVP93yA6x7/C+MvJm++1XfSsBE2aNiFPSPfo9Po="
+
+ota:
+  - platform: esphome
+    password: "9909aff98a2a69916de9971afd052534"
+
+wifi:
+  output_power: 8.5dB #solves wifi problem on ESP32-c3
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Stufa-Pellet Fallback Hotspot"
+
+captive_portal:
+
+web_server:
+  version: 3
+  sorting_groups:
+    - id: controls_group_settings
+      name: "Controls"
+      sorting_weight: 10
+    - id: sensors_group_settings
+      name: "Sensors"
+      sorting_weight: 20
+    - id: diagnostic_group_settings
+      name: "Diagnostic"
+      sorting_weight: 30
+
+i2c:
+  sda: GPIO8
+  scl: GPIO9
+  scan: false
+  id: bus_a
+
+uart:
+  - id: uart_micronova
+    tx_pin: GPIO0
+    rx_pin: GPIO1
+    baud_rate: 1200
+    data_bits: 8
+    parity: NONE
+    stop_bits: 2
+
+external_components:
+  - source: github://giova984/micronova@climate_component
+    components: [ micronova ]
+    #refresh: 30s
+
+micronova:
+  uart_id: uart_micronova
+  enable_rx_pin: GPIO3
+  update_interval: 10s
+  serial_reply_delay: 100ms
+
+switch:
+  - platform: micronova
+    stove:
+      name: Stove on/off switch
+      id: stove_switch
+      icon: "mdi:power"
+      on_turn_on:
+        - lambda: |-
+            if ( id(stove_climate_thermostat).mode != CLIMATE_MODE_HEAT ) {
+              auto call = id(stove_climate_thermostat).make_call();
+              call.set_mode("HEAT");
+              call.perform();
+            }
+      on_turn_off:
+        - lambda: |-
+            if ( id(stove_climate_thermostat).mode != CLIMATE_MODE_OFF ) {
+              auto call = id(stove_climate_thermostat).make_call();
+              call.set_mode("OFF");
+              call.perform();
+            }
+
+text_sensor:
+  - platform: micronova
+    stove_state:
+      name: Stove status
+      icon: "mdi:state-machine"
+
+number:
+  - platform: micronova
+    thermostat_temperature:
+      name: Thermostat temperature
+      id: micronova_thermostat
+      icon: "mdi:home-thermometer"
+      step: 0.5
+      min_value: 16
+      max_value: 26
+    power_level:
+      name: Power level
+      icon: "mdi:fire"
+      min_value: 1
+      max_value: 5
+    
+sensor:
+  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
+    name: "WiFi RSSI"
+    id: wifi_signal_db
+    icon: "mdi:wifi"
+    update_interval: 60s
+    entity_category: "diagnostic"
+    unit_of_measurement: "dBm"
+    device_class: signal_strength
+    web_server:
+      sorting_group_id: diagnostic_group_settings
+
+  - platform: vl53l0x
+    name: "Pellet Tank Distance"
+    id: pellet_distance
+    address: 0x29
+    update_interval: 20s
+    long_range: false
+    internal: true
+    unit_of_measurement: "m"
+    icon: "mdi:arrow-expand-vertical"
+    device_class: "distance"
+    state_class: "measurement"
+    accuracy_decimals: 3
+    entity_category: "diagnostic"
+    filters:
+      - sliding_window_moving_average:
+          window_size: 5
+          send_every: 5
+    on_value: 
+      then:
+        - sensor.template.publish:
+            id: pellet_tank_level
+            state: !lambda |-
+              float distance = x;
+              ESP_LOGD("pellet_tank", "Distance: %.3f", distance);
+              if (distance < 0.0 || distance > 1.0) {
+                ESP_LOGW("pellet_tank", "Distance out of range: %.3f", distance);
+                return 0.0;
+              }
+              return distance;
+    web_server:
+      sorting_group_id: diagnostic_group_settings
+
+  - platform: template
+    name: "Pellet Tank Level"
+    id: pellet_tank_level
+    unit_of_measurement: "%"
+    icon: "mdi:fuel"
+    device_class: "battery"
+    state_class: "measurement"
+    accuracy_decimals: 0
+    filters:
+      - lambda: |-
+          ESP_LOGD("pellet_tank", "Template sensor triggered");
+          if (!id(pellet_distance).has_state()) {
+            ESP_LOGW("pellet_tank", "Distance sensor has no state");
+            return 0.0;
+          }
+          float distance = id(pellet_distance).state;
+          ESP_LOGD("pellet_tank", "Distance: %.3f", distance);
+          if (distance < 0.0 || distance > 1.0) {
+            ESP_LOGW("pellet_tank", "Distance out of range: %.3f", distance);
+            return 0.0;
+          }
+          return distance;
+      - calibrate_linear:
+          # Distance (m) -> Percentage calibration points
+          # 4cm = 100%, 30cm = 29.6%, 35cm = 20%, 40cm = 10%, 55cm = 0%
+          - 0.04 -> 100.0  # 4cm = 100%
+          - 0.30 -> 29.6   # 30cm = 11500/38800 = 29.6%
+          - 0.35 -> 20.0   # 35cm = 80% of frustum volume
+          - 0.40 -> 10.0   # 40cm = 60% of frustum volume
+          - 0.45 -> 5.0    # 45cm = 40% of frustum volume
+          - 0.50 -> 2.0    # 50cm = 20% of frustum volume
+          - 0.55 -> 0.0    # 55cm = 0%
+      - clamp:
+          min_value: 0.0
+          max_value: 100.0
+    web_server:
+      sorting_group_id: sensors_group_settings
+
+  - platform: micronova
+    room_temperature:
+      name: Room temperature
+      id: micronova_room_temperature
+      icon: "mdi:home-thermometer"
+      accuracy_decimals: 1
+      web_server:
+        sorting_group_id: sensors_group_settings
+    fumes_temperature:
+      name: Fumes temperature
+      icon: "mdi:heat-wave"
+      memory_address: 0x3e
+      accuracy_decimals: 0
+      web_server:
+        sorting_group_id: sensors_group_settings
+    fan_speed:
+      fan_rpm_offset: 240
+      name: Fan RPM
+      icon: "mdi:fan"
+      accuracy_decimals: 0
+      web_server:
+        sorting_group_id: sensors_group_settings
+    water_temperature:
+      name: Water temperature
+      icon: "mdi:coolant-temperature"
+      memory_address: 0x03
+      water_temp_mult_factor: 1.0
+      accuracy_decimals: 1
+      web_server:
+        sorting_group_id: sensors_group_settings
+    #   water_pressure:
+    #     name: Water pressure  
+    #     icon: "mdi:gauge"
+    #     accuracy_decimals: 1
+    #     web_server:
+    #       sorting_group_id: sensors_group_settings
+
+climate:
+  - platform: thermostat
+    name: Stove Thermostat
+    id: stove_climate_thermostat
+    icon: "mdi:thermostat"
+    sensor: micronova_room_temperature
+    min_idle_time: 0s
+    min_heating_off_time: 600s
+    min_heating_run_time: 5s
+    default_preset: Normale
+    on_boot_restore_from: DEFAULT_PRESET
+    preset:
+      - name: Normale
+        default_target_temperature_low: 19
+      - name: Basso
+        default_target_temperature_low: 17
+      - name: Caldo
+        default_target_temperature_low: 21
+
+    visual:
+      min_temperature:  16 °C
+      max_temperature: 26 °C
+      temperature_step: 
+        target_temperature: 0.5
+        current_temperature: 0.5
+    #temperature_step:
+    #    target_temperature: 1
+    #    current_temperature: 0.5
+    idle_action:
+      - lambda: |-
+          ESP_LOGD("main","Bogus idle action");
+    heat_action:
+      - lambda: |-
+          ESP_LOGD("main","Bogus heat action");
+    heat_mode:
+      - lambda: |-
+          if ( ! id(stove_switch).state ) {
+            id(stove_switch).turn_on();
+          }
+    off_mode:
+      - lambda: |-
+          if ( id(stove_switch).state ) {
+            id(stove_switch).turn_off();
+          }
+    target_temperature_change_action:
+       - lambda: |-
+           if ( id(stove_climate_thermostat).target_temperature != id(micronova_thermostat).state ) {
+             auto call = id(micronova_thermostat).make_call();
+             call.set_value(id(stove_climate_thermostat).target_temperature);
+             call.perform();
+           }
