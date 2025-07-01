@@ -33,15 +33,21 @@ captive_portal:
 web_server:
   version: 3
   sorting_groups:
+    - id: status_group_settings
+      name: "Status"
+      sorting_weight: 0
+    - id: thermostat_group_settings
+      name: "Thermostat"
+      sorting_weight: 10
     - id: controls_group_settings
       name: "Controls"
-      sorting_weight: 10
+      sorting_weight: 20
     - id: sensors_group_settings
       name: "Sensors"
-      sorting_weight: 20
+      sorting_weight: 30
     - id: diagnostic_group_settings
       name: "Diagnostic"
-      sorting_weight: 30
+      sorting_weight: 40
 
 i2c:
   sda: GPIO8
@@ -89,12 +95,18 @@ switch:
               call.set_mode("OFF");
               call.perform();
             }
+      web_server:
+        sorting_group_id: controls_group_settings
+        sorting_weight: 10
 
 text_sensor:
   - platform: micronova
     stove_state:
       name: Stove status
       icon: "mdi:state-machine"
+      web_server:
+        sorting_group_id: status_group_settings
+        sorting_weight: 0
 
 number:
   - platform: micronova
@@ -105,11 +117,17 @@ number:
       step: 0.5
       min_value: 16
       max_value: 26
+      web_server:
+        sorting_group_id: controls_group_settings
+        sorting_weight: 20
     power_level:
       name: Power level
       icon: "mdi:fire"
       min_value: 1
       max_value: 5
+      web_server:
+        sorting_group_id: controls_group_settings
+        sorting_weight: 30
     
 sensor:
   - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
@@ -122,6 +140,7 @@ sensor:
     device_class: signal_strength
     web_server:
       sorting_group_id: diagnostic_group_settings
+      sorting_weight: 10
 
   - platform: vl53l0x
     name: "Pellet Tank Distance"
@@ -191,7 +210,8 @@ sensor:
           min_value: 0.0
           max_value: 100.0
     web_server:
-      sorting_group_id: sensors_group_settings
+      sorting_group_id: status_group_settings
+      sorting_weight: 10
 
   - platform: micronova
     room_temperature:
@@ -201,6 +221,7 @@ sensor:
       accuracy_decimals: 1
       web_server:
         sorting_group_id: sensors_group_settings
+        sorting_weight: 10
     fumes_temperature:
       name: Fumes temperature
       icon: "mdi:heat-wave"
@@ -208,6 +229,7 @@ sensor:
       accuracy_decimals: 0
       web_server:
         sorting_group_id: sensors_group_settings
+        sorting_weight: 30
     fan_speed:
       fan_rpm_offset: 240
       name: Fan RPM
@@ -215,6 +237,7 @@ sensor:
       accuracy_decimals: 0
       web_server:
         sorting_group_id: sensors_group_settings
+        sorting_weight: 40
     water_temperature:
       name: Water temperature
       icon: "mdi:coolant-temperature"
@@ -223,6 +246,7 @@ sensor:
       accuracy_decimals: 1
       web_server:
         sorting_group_id: sensors_group_settings
+        sorting_weight: 20
     #   water_pressure:
     #     name: Water pressure  
     #     icon: "mdi:gauge"
@@ -281,3 +305,5 @@ climate:
              call.set_value(id(stove_climate_thermostat).target_temperature);
              call.perform();
            }
+    web_server:
+        sorting_group_id: thermostat_group_settings
