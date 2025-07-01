@@ -5,6 +5,7 @@ from esphome.const import (
     DEVICE_CLASS_TEMPERATURE,
     UNIT_CELSIUS,
     CONF_STEP,
+    CONF_MIN_VALUE,
     CONF_MAX_VALUE,
 )
 
@@ -45,6 +46,8 @@ CONFIG_SCHEMA = cv.Schema(
                     CONF_MEMORY_WRITE_LOCATION, default=0xA0
                 ): cv.hex_int_range(),
                 cv.Optional(CONF_STEP, default=1.0): cv.float_range(min=0.1, max=10.0),
+                cv.Optional(CONF_MIN_VALUE, default=16): cv.int_,
+                cv.Optional(CONF_MAX_VALUE, default=27): cv.int_,
             }
         ),
         cv.Optional(CONF_POWER_LEVEL): number.number_schema(
@@ -59,7 +62,8 @@ CONFIG_SCHEMA = cv.Schema(
         .extend(
             {
                 cv.Optional(CONF_MEMORY_WRITE_LOCATION, default=0xA0): cv.hex_int_range(),
-                cv.Optional(CONF_MAX_VALUE, default=5): cv.int_range(min=1),
+                cv.Optional(CONF_MIN_VALUE, default=1): cv.int_,
+                cv.Optional(CONF_MAX_VALUE, default=5): cv.int_,
             }
         ),
     }
@@ -72,8 +76,8 @@ async def to_code(config):
     if thermostat_temperature_config := config.get(CONF_THERMOSTAT_TEMPERATURE):
         numb = await number.new_number(
             thermostat_temperature_config,
-            min_value=0,
-            max_value=40,
+            min_value=thermostat_temperature_config.get(CONF_MIN_VALUE),
+            max_value=thermostat_temperature_config.get(CONF_MAX_VALUE),
             step=thermostat_temperature_config.get(CONF_STEP),
         )
         cg.add(numb.set_micronova_object(mv))
@@ -98,7 +102,7 @@ async def to_code(config):
     if power_level_config := config.get(CONF_POWER_LEVEL):
         numb = await number.new_number(
             power_level_config,
-            min_value=1,
+            min_value=power_level_config.get(CONF_MAX_VALUE),
             max_value=power_level_config.get(CONF_MAX_VALUE),
             step=1,
         )
