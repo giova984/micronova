@@ -50,8 +50,8 @@ web_server:
       sorting_weight: 40
 
 i2c:
-  sda: GPIO8
-  scl: GPIO9
+  sda: GPIO5
+  scl: GPIO6
   scan: false
   id: bus_a
 
@@ -111,7 +111,7 @@ text_sensor:
 number:
   - platform: micronova
     thermostat_temperature:
-      name: Thermostat temperature
+      name: Target ambient temperature
       id: micronova_thermostat
       icon: "mdi:home-thermometer"
       step: 0.5
@@ -157,8 +157,8 @@ sensor:
     entity_category: "diagnostic"
     filters:
       - sliding_window_moving_average:
-          window_size: 5
-          send_every: 5
+          window_size: 10
+          send_every: 3
     on_value: 
       then:
         - sensor.template.publish:
